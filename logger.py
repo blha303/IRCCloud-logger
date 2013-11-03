@@ -6,9 +6,9 @@ import errno
 import sys
 import unicodedata
 import base64
+import websocket
 
 tmpcookie = "PUT COOKIE HERE"
-s = requests.Session()
 delay = 0.0
 idleinterval = 0
 user = {}
@@ -28,7 +28,7 @@ def uni2str(inp):
 
 def auth(email, password):
     req = requests.post("https://www.irccloud.com/chat/login",
-                        params={"email": email, "password": password})
+                        data={"email": email, "password": password})
     d = req.json()
     if d["success"]:
         return d["session"]
@@ -37,13 +37,13 @@ def auth(email, password):
 
 
 def streamiter(cookie):
-    cookies = dict(session=cookie)
-    req = requests.Request("GET",'https://www.irccloud.com/chat/stream',
-                           cookies=cookies).prepare()
-    resp = s.send(req, stream=True)
-    for line in resp.iter_lines():
-        if line:
-            yield json.loads(line)
+    ws = websocket.create_connection("wss://www.irccloud.com",
+                                     header={"Cookie: session=%s" % cookie}, 
+                                     origin="https://www.irccloud.com")
+    while 1:
+        msg = ws.recv()
+        if msg:
+            yield json.loads(msg)
 
 
 def parseline(line):
@@ -69,11 +69,8 @@ def parseline(line):
     def p_num_invites(l):
         user["num_invites"] = l["num_invites"]
     def p_oob_include(l):
-#        req = requests.get("https://www.irccloud.com" + l["url"], headers={"Accept-Encoding": "gzip"}).json()
-#        if type(req) == dict:
-#            return
-        with open("backlogdemooutput.txt") as f:
-            req = json.loads(f.read())
+        req = requests.get("https://www.irccloud.com" + l["url"], 
+                            headers={"Cookie": "session=%s" % tmpcookie, "Accept-Encoding": "gzip"}).json()
         for oobline in req:
             try:
                 parseline(oobline)
@@ -307,7 +304,7 @@ def log(msg, server="IRCCloud", channel="#feedback",
 if __name__ == "__main__":
     with open("rawlog.json", "w") as f:
         print time.ctime() + " log started"
-    if len(sys.argv) > 2 and "@" in sys.argv[1] and tmpcookie != "PUT COOKIE HERE":
+    if len(sys.argv) > 2 and "@" in sys.argv[1]:
         isauthed = auth(sys.argv[1], " ".join(sys.argv[2:]))
         if isauthed:
             tmpcookie = isauthed
