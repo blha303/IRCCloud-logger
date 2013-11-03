@@ -1,6 +1,8 @@
 IRCCloud-logger
 ==========
 
+Project discussion: [irc.irccloud.com #logger](ircs://irc.irccloud.com:6697/%23logger) <sup><sub>([webirc](https://kiwiirc.com/client/irc.irccloud.com/?nick=logger|?#logger))</sub></sup>
+
 This project uses [websocket-client](https://github.com/liris/websocket-client). Use `pip install https://github.com/liris/websocket-client/archive/master.zip` to install it.
 
 Python program for producing text logs from IRCCloud's stream and backlog.
