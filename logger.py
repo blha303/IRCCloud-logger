@@ -37,7 +37,12 @@ def auth(email, password):
 
 
 def streamiter(cookie):
-    ws = websocket.create_connection("wss://www.irccloud.com",
+    try:
+        with open('lasteid') as f:
+            lasteid = f.read()
+    except IOError:
+        lasteid = "0"
+    ws = websocket.create_connection("wss://www.irccloud.com/?since_id=" + lasteid,
                                      header=["Cookie: session=%s" % cookie],
                                      origin="https://www.irccloud.com")
     while 1:
@@ -56,6 +61,8 @@ def parseline(line):
     chkickfmt = "{time} -!- {nick} was kicked from {chan} by {kicker} [{msg}]"
     chquitfmt = "{time} -!- {nick} [{usermask}] has quit [{msg}]"
     chnickfmt = "{time} {old_nick} is now known as {new_nick}"
+    with open('lasteid', 'w+') as f:
+        f.write(str(line['eid']))
     with open("rawlog.json", "a") as f:
         f.write(json.dumps(line) + "\n")
 
