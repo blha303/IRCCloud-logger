@@ -62,7 +62,7 @@ def parseline(line):
     chquitfmt = "{time} -!- {nick} [{usermask}] has quit [{msg}]"
     chnickfmt = "{time} {old_nick} is now known as {new_nick}"
     with open('lasteid', 'w+') as f:
-        f.write(str(line['eid']))
+        f.write(str(line['eid']) + "\n")
     with open("rawlog.json", "a") as f:
         f.write(json.dumps(line) + "\n")
 
@@ -353,7 +353,7 @@ def log(msg, server="IRCCloud", channel="#feedback",
         filename = base64.urlsafe_b64encode(channel + "_" + date)
         with open("logs" + os.sep + server +
                   os.sep + filename + ".log", "a+") as f:
-            f.write(uni2str(msg))
+            f.write(uni2str(msg) + "\n")
         print "(S)", date, server+":"+channel, msg
     except OSError as exception:
         print "--- ERROR ---"
