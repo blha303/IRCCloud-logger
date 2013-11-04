@@ -62,7 +62,7 @@ def parseline(line):
     chquitfmt = "{time} -!- {nick} [{usermask}] has quit [{msg}]"
     chnickfmt = "{time} {old_nick} is now known as {new_nick}"
     with open('lasteid', 'w+') as f:
-        f.write(str(line['eid']) + "\n")
+        f.write(str(line['eid']))
     with open("rawlog.json", "a") as f:
         f.write(json.dumps(line) + "\n")
 
