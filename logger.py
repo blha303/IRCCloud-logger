@@ -38,7 +38,7 @@ def auth(email, password):
 
 def streamiter(cookie):
     ws = websocket.create_connection("wss://www.irccloud.com",
-                                     header={"Cookie: session=%s" % cookie},
+                                     header=["Cookie: session=%s" % cookie],
                                      origin="https://www.irccloud.com")
     while 1:
         msg = ws.recv()
