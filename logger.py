@@ -342,7 +342,11 @@ class AlreadyLoggedError(Exception):
 
 def log(msg, server="IRCCloud", channel="#feedback",
         date="2013-10-31", ts="00:00:00"):
-#    if not channel in ["#list", "#of", "#channels"]:
+     # Channel log whitelist
+#    if not channel in ["#list", "#of", "#channels", "#to", "#log"]:
+#        return
+     # Channel log blacklist
+#    if channel in ["#list", "#of", "#channels", "#to", "#ignore"]:
 #        return
     def make_sure_path_exists(path):
         try:
@@ -351,16 +355,22 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        make_sure_path_exists("logs" + os.sep + server)
-        filename = base64.urlsafe_b64encode(channel + "_" + date)
+        channel = base64.urlsafe_b64encode(channel)
+        make_sure_path_exists("logs" + os.sep + server + os.sep + channel)
+        # logs/server/channel(b64)/date.log
         with open("logs" + os.sep + server +
-                  os.sep + filename + ".log", "a+") as f:
+                  os.sep + channel + os.sep +
+                  date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
         print "(S)", date, server+":"+channel, msg
     except OSError as exception:
         print "--- ERROR ---"
         print "Unable to log %s %s:%s %s" % (date, server, channel, msg)
         print "because: " + os.strerror(exception.errno)
+    except UnicodeEncodeError as exception:
+        print "--- ERROR ---"
+        print u"Unable to log %s %s:%s %s" % (date, server, channel, msg)
+        print "because: base64 was unable to encode the channel name."
 
 
 if __name__ == "__main__":
