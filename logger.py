@@ -355,11 +355,11 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        channel = base64.urlsafe_b64encode(channel)
-        make_sure_path_exists("logs" + os.sep + server + os.sep + channel)
+        channelb64 = base64.urlsafe_b64encode(channel)
+        make_sure_path_exists("logs" + os.sep + server + os.sep + channelb64)
         # logs/server/channel(b64)/date.log
         with open("logs" + os.sep + server +
-                  os.sep + channel + os.sep +
+                  os.sep + channelb64 + os.sep +
                   date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
         print "(S)", date, server+":"+channel, msg
