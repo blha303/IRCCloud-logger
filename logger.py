@@ -18,12 +18,7 @@ whois = {}
 
 
 def uni2str(inp):
-    if isinstance(inp, unicode):
-        return unicodedata.normalize('NFKD', inp).encode('ascii', 'ignore')
-    elif isinstance(inp, str):
-        return inp
-    else:
-        print inp
+    return inp.encode('ascii', 'xmlcharrefreplace')
 
 
 def auth(email, password):
@@ -53,15 +48,15 @@ def streamiter(cookie):
 
 
 def parseline(line):
-    msgfmt = "{time} <{nick}> {msg}"
-    mefmt = "{time} * {nick} {msg}"
-    noticefmt = "{time} -{nick}- {msg}"
-    topicfmt = "{time} -!- {nick} changed the topic of {chan} to: {msg}"
-    chjoinfmt = "{time} -!- {nick} [{usermask}] has joined {chan}"
-    chpartfmt = "{time} -!- {nick} [{usermask}] has left {chan} [{msg}]"
-    chkickfmt = "{time} -!- {nick} was kicked from {chan} by {kicker} [{msg}]"
-    chquitfmt = "{time} -!- {nick} [{usermask}] has quit [{msg}]"
-    chnickfmt = "{time} {old_nick} is now known as {new_nick}"
+    msgfmt = u"{time} <{nick}> {msg}"
+    mefmt = u"{time} * {nick} {msg}"
+    noticefmt = u"{time} -{nick}- {msg}"
+    topicfmt = u"{time} -!- {nick} changed the topic of {chan} to: {msg}"
+    chjoinfmt = u"{time} -!- {nick} [{usermask}] has joined {chan}"
+    chpartfmt = u"{time} -!- {nick} [{usermask}] has left {chan} [{msg}]"
+    chkickfmt = u"{time} -!- {nick} was kicked from {chan} by {kicker} [{msg}]"
+    chquitfmt = u"{time} -!- {nick} [{usermask}] has quit [{msg}]"
+    chnickfmt = u"{time} {old_nick} is now known as {new_nick}"
     with open('lasteid', 'w+') as f:
         f.write(str(line['eid']))
     with open("rawlog.json", "a") as f:
@@ -133,7 +128,7 @@ def parseline(line):
         ts = getts(l)
         log(msgfmt.format(time=time.strftime("%H:%M:%S", ts),
                           nick=l["from"],
-                          msg=uni2str(l["msg"])),
+                          msg=l["msg"]),
             server=servers[l["cid"]]["name"],
             channel=l["chan"],
             date=time.strftime("%Y-%m-%d", ts))
@@ -356,21 +351,21 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        channelb64 = base64.urlsafe_b64encode(channel.encode('ascii', 'xmlcharrefreplace'))
+        channelb64 = base64.urlsafe_b64encode(uni2str(channel))
         make_sure_path_exists("logs" + os.sep + server + os.sep + channelb64)
         # logs/server/channel(b64)/date.log
         with open("logs" + os.sep + server +
                   os.sep + channelb64 + os.sep +
                   date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
-        print "(S)", date, server+":"+channel.encode('ascii', 'xmlcharrefreplace'), msg
+        print "(S)", date, server+":"+uni2str(channel), msg
     except OSError as exception:
         print "--- ERROR ---"
-        print "Unable to log %s %s:%s %s" % (date, server, channel.encode('ascii', 'xmlcharrefreplace'), msg)
+        print "Unable to log %s %s:%s %s" % (date, uni2str(server), uni2str(channel), uni2str(msg))
         print "because: " + os.strerror(exception.errno)
     except UnicodeEncodeError as exception:
         print "--- ERROR ---"
-        print u"Unable to log %s %s:%s %s" % (date, server, channel.encode('ascii', 'xmlcharrefreplace'), msg)
+        print u"Unable to log %s %s:%s %s" % (date, uni2str(server), uni2str(channel), uni2str(msg))
         print "because: base64 was unable to encode the channel name."
 
 
