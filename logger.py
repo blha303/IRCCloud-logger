@@ -42,7 +42,8 @@ def streamiter(cookie):
             lasteid = f.read()
     except IOError:
         lasteid = "0"
-    ws = websocket.create_connection("wss://www.irccloud.com/?since_id=" + lasteid,
+    ws = websocket.create_connection("wss://www.irccloud.com/"
+                                     "?since_id=" + lasteid,
                                      header=["Cookie: session=%s" % cookie],
                                      origin="https://www.irccloud.com")
     while 1:
@@ -342,6 +343,12 @@ class AlreadyLoggedError(Exception):
 
 def log(msg, server="IRCCloud", channel="#feedback",
         date="2013-10-31", ts="00:00:00"):
+     # Channel log whitelist
+#    if not channel in ["#list", "#of", "#channels", "#to", "#log"]:
+#        return
+     # Channel log blacklist
+#    if channel in ["#list", "#of", "#channels", "#to", "#ignore"]:
+#        return
     def make_sure_path_exists(path):
         try:
             os.makedirs(path)
@@ -349,16 +356,22 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        make_sure_path_exists("logs" + os.sep + server)
-        filename = base64.urlsafe_b64encode(channel + "_" + date)
+        channelb64 = base64.urlsafe_b64encode(channel.encode('ascii', 'xmlcharrefreplace'))
+        make_sure_path_exists("logs" + os.sep + server + os.sep + channelb64)
+        # logs/server/channel(b64)/date.log
         with open("logs" + os.sep + server +
-                  os.sep + filename + ".log", "a+") as f:
-            f.write(uni2str(msg))
-        print "(S)", date, server+":"+channel, msg
+                  os.sep + channelb64 + os.sep +
+                  date + ".log", "a+") as f:
+            f.write(uni2str(msg) + "\n")
+        print "(S)", date, server+":"+channel.encode('ascii', 'xmlcharrefreplace'), msg
     except OSError as exception:
         print "--- ERROR ---"
-        print "Unable to log %s %s:%s %s" % (date, server, channel, msg)
+        print "Unable to log %s %s:%s %s" % (date, server, channel.encode('ascii', 'xmlcharrefreplace'), msg)
         print "because: " + os.strerror(exception.errno)
+    except UnicodeEncodeError as exception:
+        print "--- ERROR ---"
+        print u"Unable to log %s %s:%s %s" % (date, server, channel.encode('ascii', 'xmlcharrefreplace'), msg)
+        print "because: base64 was unable to encode the channel name."
 
 
 if __name__ == "__main__":
