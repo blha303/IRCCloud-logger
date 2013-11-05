@@ -342,6 +342,8 @@ class AlreadyLoggedError(Exception):
 
 def log(msg, server="IRCCloud", channel="#feedback",
         date="2013-10-31", ts="00:00:00"):
+#    if not channel in ["#list", "#of", "#channels"]:
+#        return
     def make_sure_path_exists(path):
         try:
             os.makedirs(path)
