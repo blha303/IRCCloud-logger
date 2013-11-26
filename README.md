@@ -15,3 +15,6 @@ Contributing
 ------------
 
 * Please make all code conform to PEP8, including the 80 character limit per line. Use the tool `pep8` available from pip if needed.
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/blha303/irccloud-logger/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
