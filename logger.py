@@ -4,7 +4,6 @@ import json
 import os
 import errno
 import sys
-import unicodedata
 import base64
 import websocket
 
@@ -15,6 +14,8 @@ user = {}
 servers = {}
 buffers = {}
 whois = {}
+token_uri = "https://www.irccloud.com/chat/auth-formtoken"
+login_uri = "https://www.irccloud.com/chat/login"
 
 
 def uni2str(inp):
@@ -22,8 +23,12 @@ def uni2str(inp):
 
 
 def auth(email, password):
-    req = requests.post("https://www.irccloud.com/chat/login",
-                        data={"email": email, "password": password})
+    post_data = {
+        "email": email,
+        "password": password,
+        "token": requests.post(token_uri).json()['token']
+    }
+    req = requests.post(login_uri, data=post_data)
     d = req.json()
     if d["success"]:
         return d["session"]
@@ -327,7 +332,7 @@ def parseline(line):
         """ TODO """
 
     try:
-        locals()["p_"+line["type"]](line)
+        locals()["p_" + line["type"]](line)
     except KeyError:
         """ """
 
@@ -358,34 +363,41 @@ def log(msg, server="IRCCloud", channel="#feedback",
                   os.sep + channelb64 + os.sep +
                   date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
-        print "(S)", date, server+":"+uni2str(channel), msg
+        print "(S)", date, server + ":" + uni2str(channel), msg
     except OSError as exception:
         print "--- ERROR ---"
-        print "Unable to log %s %s:%s %s" % (date, uni2str(server), uni2str(channel), uni2str(msg))
+        print "Unable to log %s %s:%s %s" % (
+            date, uni2str(server), uni2str(channel), uni2str(msg))
         print "because: " + os.strerror(exception.errno)
     except UnicodeEncodeError as exception:
         print "--- ERROR ---"
-        print u"Unable to log %s %s:%s %s" % (date, uni2str(server), uni2str(channel), uni2str(msg))
+        print u"Unable to log %s %s:%s %s" % (
+            date, uni2str(server), uni2str(channel), uni2str(msg))
         print "because: base64 was unable to encode the channel name."
 
 
 if __name__ == "__main__":
-    with open("rawlog.json", "w") as f:
-        print time.ctime() + " log started"
-    if len(sys.argv) > 2 and "@" in sys.argv[1]:
-        isauthed = auth(sys.argv[1], " ".join(sys.argv[2:]))
-        if isauthed:
-            tmpcookie = isauthed
-        else:
-            print "Unable to authenticate with email " + sys.argv[1]
+    try:
+        with open("rawlog.json", "w") as f:
+            print time.ctime() + " log started"
+        if len(sys.argv) > 2 and "@" in sys.argv[1]:
+            isauthed = auth(sys.argv[1], " ".join(sys.argv[2:]))
+            if isauthed:
+                tmpcookie = isauthed
+            else:
+                print "Unable to authenticate with email " + sys.argv[1]
+                sys.exit(1)
+        elif (tmpcookie == "PUT COOKIE HERE" and len(sys.argv) == 2
+                and not "@" in sys.argv[1]):
+            tmpcookie = sys.argv[1]
+        elif tmpcookie == "PUT COOKIE HERE":
+            print "Usage: logger.py <cookie> | logger.py <email> <password>"
+            print "Or, edit logger.py and put the cookie " \
+                  "in 'tmpcookie' at the top of the file"
             sys.exit(1)
-    elif (tmpcookie == "PUT COOKIE HERE" and len(sys.argv) == 2
-            and not "@" in sys.argv[1]):
-        tmpcookie = sys.argv[1]
-    elif tmpcookie == "PUT COOKIE HERE":
-        print "Usage: logger.py <cookie> | logger.py <email> <password>"
-        print "Or, edit logger.py and put the cookie " \
-              "in 'tmpcookie' at the top of the file"
-        sys.exit(1)
-    for line in streamiter(tmpcookie):
-        parseline(line)
+        for line in streamiter(tmpcookie):
+            parseline(line)
+    except KeyboardInterrupt:
+        print "\nClosing connections."
+        print "Exiting."
+        sys.exit()
