@@ -28,7 +28,10 @@ def auth(email, password):
         "password": password,
         "token": requests.post(token_uri).json()['token']
     }
-    req = requests.post(login_uri, data=post_data)
+    headers = {
+        'x-auth-formtoken': post_data['token']
+    }
+    req = requests.post(login_uri, data=post_data, headers=headers)
     d = req.json()
     if d["success"]:
         return d["session"]
