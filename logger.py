@@ -23,15 +23,18 @@ def uni2str(inp):
 
 
 def auth(email, password):
+    formtoken_headers = {
+        'content-length': 0
+    }
     post_data = {
         "email": email,
         "password": password,
-        "token": requests.post(token_uri).json()['token']
+        "token": requests.post(token_uri, headers=formtoken_headers).json()['token']
     }
-    headers = {
+    login_headers = {
         'x-auth-formtoken': post_data['token']
     }
-    req = requests.post(login_uri, data=post_data, headers=headers)
+    req = requests.post(login_uri, data=post_data, headers=login_headers)
     d = req.json()
     if d["success"]:
         return d["session"]
