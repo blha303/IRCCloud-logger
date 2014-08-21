@@ -11,6 +11,15 @@ Currently saves log names as base64, because, come on, if you need the filenames
 
 Authentication and backlog-loading issues solved by moving to websocket instead of https. Many thanks to @l1am9111 for doing this.
 
+Configuration
+-------------
+Configuration goes in a file named ~/.irccloudrc, and should contain either "email" and "password" keys, or a "cookie" key.
+Example:
+{
+ "email": "example@example.com",
+ "password": "passwordgoeshere"
+}
+
 Contributing
 ------------
 

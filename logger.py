@@ -7,7 +7,6 @@ import sys
 import base64
 import websocket
 
-tmpcookie = "PUT COOKIE HERE"
 delay = 0.0
 idleinterval = 0
 user = {}
@@ -90,7 +89,7 @@ def parseline(line):
 
     def p_oob_include(l):
         req = requests.get("https://www.irccloud.com" + l["url"],
-                           headers={"Cookie": "session=%s" % tmpcookie,
+                           headers={"Cookie": "session=%s" % authcookie,
                                     "Accept-Encoding": "gzip"}).json()
         for oobline in req:
             try:
@@ -386,22 +385,21 @@ if __name__ == "__main__":
     try:
         with open("rawlog.json", "w") as f:
             print time.ctime() + " log started"
-        if len(sys.argv) > 2 and "@" in sys.argv[1]:
-            isauthed = auth(sys.argv[1], " ".join(sys.argv[2:]))
-            if isauthed:
-                tmpcookie = isauthed
-            else:
-                print "Unable to authenticate with email " + sys.argv[1]
+        cfgfile = open(os.path.expanduser("~/.irccloudrc"), "r")
+        cfg = json.load(cfgfile)
+        cfgfile.close
+        if(cfg["email"]):
+            authcookie = auth(cfg["email"], cfg["password"])
+            if not authcookie:
+                print "Unable to authenticate with email " + cfg["email"]
                 sys.exit(1)
-        elif (tmpcookie == "PUT COOKIE HERE" and len(sys.argv) == 2
-                and not "@" in sys.argv[1]):
-            tmpcookie = sys.argv[1]
-        elif tmpcookie == "PUT COOKIE HERE":
-            print "Usage: logger.py <cookie> | logger.py <email> <password>"
-            print "Or, edit logger.py and put the cookie " \
-                  "in 'tmpcookie' at the top of the file"
+        elif(cfg["cookie"]):
+            authcookie = cfg["cookie"]
+        else:
+            print "Configuration file ~/.irccloudrc must contain either " \
+                  " email/password or cookie"
             sys.exit(1)
-        for line in streamiter(tmpcookie):
+        for line in streamiter(authcookie):
             parseline(line)
     except KeyboardInterrupt:
         print "\nClosing connections."
