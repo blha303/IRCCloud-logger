@@ -15,6 +15,7 @@ Configuration
 -------------
 Configuration goes in a file named ~/.irccloudrc, and should contain either "email" and "password" keys, or a "cookie" key.
 Example:
+
     {
      "email": "example@example.com",
      "password": "passwordgoeshere"
