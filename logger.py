@@ -6,8 +6,8 @@ import errno
 import sys
 import base64
 import websocket
-import string
 
+tmpcookie = "PUT COOKIE HERE"
 delay = 0.0
 idleinterval = 0
 user = {}
@@ -90,7 +90,7 @@ def parseline(line):
 
     def p_oob_include(l):
         req = requests.get("https://www.irccloud.com" + l["url"],
-                           headers={"Cookie": "session=%s" % authcookie,
+                           headers={"Cookie": "session=%s" % tmpcookie,
                                     "Accept-Encoding": "gzip"}).json()
         for oobline in req:
             try:
@@ -362,10 +362,12 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        channel_fssafe = uni2str(channel).replace("/", "_")
-        make_sure_path_exists("logs" + os.sep + server + os.sep + channel_fssafe)
-        # logs/server/channel_fssafe/date.log
-        with open("logs/{}/{}/{}.log".format(server, channel_fssafe, date), "a+") as f:
+        channelb64 = base64.urlsafe_b64encode(uni2str(channel))
+        make_sure_path_exists("logs" + os.sep + server + os.sep + channelb64)
+        # logs/server/channel(b64)/date.log
+        with open("logs" + os.sep + server +
+                  os.sep + channelb64 + os.sep +
+                  date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
         print "(S)", date, server + ":" + uni2str(channel), msg
     except OSError as exception:
@@ -377,27 +379,29 @@ def log(msg, server="IRCCloud", channel="#feedback",
         print "--- ERROR ---"
         print u"Unable to log %s %s:%s %s" % (
             date, uni2str(server), uni2str(channel), uni2str(msg))
-        print "because: unicode is annoying."
+        print "because: base64 was unable to encode the channel name."
 
 
 if __name__ == "__main__":
     try:
         with open("rawlog.json", "w") as f:
             print time.ctime() + " log started"
-        with open(os.path.expanduser("~/.irccloudrc"), "r") as cfh:
-            cfg = json.load(cfgfile)
-        if(cfg["email"]):
-            authcookie = auth(cfg["email"], cfg["password"])
-            if not authcookie:
-                print "Unable to authenticate with email " + cfg["email"]
+        if len(sys.argv) > 2 and "@" in sys.argv[1]:
+            isauthed = auth(sys.argv[1], " ".join(sys.argv[2:]))
+            if isauthed:
+                tmpcookie = isauthed
+            else:
+                print "Unable to authenticate with email " + sys.argv[1]
                 sys.exit(1)
-        elif(cfg["cookie"]):
-            authcookie = cfg["cookie"]
-        else:
-            print "Configuration file ~/.irccloudrc must contain either " \
-                  " email/password or cookie. See README.md"
+        elif (tmpcookie == "PUT COOKIE HERE" and len(sys.argv) == 2
+                and not "@" in sys.argv[1]):
+            tmpcookie = sys.argv[1]
+        elif tmpcookie == "PUT COOKIE HERE":
+            print "Usage: logger.py <cookie> | logger.py <email> <password>"
+            print "Or, edit logger.py and put the cookie " \
+                  "in 'tmpcookie' at the top of the file"
             sys.exit(1)
-        for line in streamiter(authcookie):
+        for line in streamiter(tmpcookie):
             parseline(line)
     except KeyboardInterrupt:
         print "\nClosing connections."
