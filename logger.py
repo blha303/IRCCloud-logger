@@ -6,6 +6,7 @@ import errno
 import sys
 import base64
 import websocket
+import string
 
 delay = 0.0
 idleinterval = 0
@@ -361,11 +362,11 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        channelb64 = base64.urlsafe_b64encode(uni2str(channel))
-        make_sure_path_exists("logs" + os.sep + server + os.sep + channelb64)
-        # logs/server/channel(b64)/date.log
+        channel_fssafe = string.replace(uni2str(channel), "/", "_")
+        make_sure_path_exists("logs" + os.sep + server + os.sep + channel_fssafe)
+        # logs/server/channel_fssafe/date.log
         with open("logs" + os.sep + server +
-                  os.sep + channelb64 + os.sep +
+                  os.sep + channel_fssafe + os.sep +
                   date + ".log", "a+") as f:
             f.write(uni2str(msg) + "\n")
         print "(S)", date, server + ":" + uni2str(channel), msg
