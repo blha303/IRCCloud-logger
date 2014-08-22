@@ -362,12 +362,10 @@ def log(msg, server="IRCCloud", channel="#feedback",
             if exception.errno != errno.EEXIST:
                 raise
     try:
-        channel_fssafe = string.replace(uni2str(channel), "/", "_")
+        channel_fssafe = uni2str(channel).replace("/", "_")
         make_sure_path_exists("logs" + os.sep + server + os.sep + channel_fssafe)
         # logs/server/channel_fssafe/date.log
-        with open("logs" + os.sep + server +
-                  os.sep + channel_fssafe + os.sep +
-                  date + ".log", "a+") as f:
+        with open("logs/{}/{}/{}.log".format(server, channel_fssafe, date), "a+") as f:
             f.write(uni2str(msg) + "\n")
         print "(S)", date, server + ":" + uni2str(channel), msg
     except OSError as exception:
@@ -379,16 +377,15 @@ def log(msg, server="IRCCloud", channel="#feedback",
         print "--- ERROR ---"
         print u"Unable to log %s %s:%s %s" % (
             date, uni2str(server), uni2str(channel), uni2str(msg))
-        print "because: base64 was unable to encode the channel name."
+        print "because: unicode is annoying."
 
 
 if __name__ == "__main__":
     try:
         with open("rawlog.json", "w") as f:
             print time.ctime() + " log started"
-        cfgfile = open(os.path.expanduser("~/.irccloudrc"), "r")
-        cfg = json.load(cfgfile)
-        cfgfile.close
+        with open(os.path.expanduser("~/.irccloudrc"), "r") as cfh:
+            cfg = json.load(cfgfile)
         if(cfg["email"]):
             authcookie = auth(cfg["email"], cfg["password"])
             if not authcookie:
@@ -398,7 +395,7 @@ if __name__ == "__main__":
             authcookie = cfg["cookie"]
         else:
             print "Configuration file ~/.irccloudrc must contain either " \
-                  " email/password or cookie"
+                  " email/password or cookie. See README.md"
             sys.exit(1)
         for line in streamiter(authcookie):
             parseline(line)
