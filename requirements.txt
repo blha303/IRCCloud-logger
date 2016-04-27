@@ -1,2 +1,0 @@
-requests
--e git://github.com/liris/websocket-client@6894bfc6a8d4350936f1b1bbe24c413b21765d7c#egg=websocket
