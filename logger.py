@@ -5,7 +5,7 @@ import os
 import errno
 import sys
 import base64
-import websocket
+from lib import websocket
 
 tmpcookie = "PUT COOKIE HERE"
 delay = 0.0
@@ -48,10 +48,10 @@ def streamiter(cookie):
             lasteid = f.read()
     except IOError:
         lasteid = "0"
-    ws = websocket.create_connection("wss://www.irccloud.com/"
+    ws = websocket.create_connection("wss://api.irccloud.com/"
                                      "?since_id=" + lasteid,
                                      header=["Cookie: session=%s" % cookie],
-                                     origin="https://www.irccloud.com")
+                                     origin="https://api.irccloud.com")
     while 1:
         msg = ws.recv()
         if msg:
