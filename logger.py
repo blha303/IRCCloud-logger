@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import requests
 import time
 import json
@@ -16,6 +17,7 @@ buffers = {}
 whois = {}
 token_uri = "https://www.irccloud.com/chat/auth-formtoken"
 login_uri = "https://www.irccloud.com/chat/login"
+failed = False
 
 
 def uni2str(inp):
@@ -68,10 +70,21 @@ def parseline(line):
     chkickfmt = u"{time} -!- {nick} was kicked from {chan} by {kicker} [{msg}]"
     chquitfmt = u"{time} -!- {nick} [{usermask}] has quit [{msg}]"
     chnickfmt = u"{time} {old_nick} is now known as {new_nick}"
-    with open('lasteid', 'w+') as f:
-        f.write(str(line['eid']))
     with open("rawlog.json", "a") as f:
         f.write(json.dumps(line) + "\n")
+    if not "eid" in line:
+        global tmpcookie, failed
+        from getpass import getpass
+        if failed:
+            print "Auth failed twice, please check your credentials"
+            sys.exit(1)
+        email = raw_input("Unable to authenticate. Email address: ")
+        password = getpass()
+        tmpcookie = auth(email, password)
+        failed = True
+        return parseline(line)
+    with open('lasteid', 'w+') as f:
+        f.write(str(line['eid']))
 
     def getts(l):
         return time.gmtime(float(str(l["eid"])[:-6]+"."+str(l["eid"])[-6:]))
