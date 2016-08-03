@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import requests
 import time
 import json
@@ -68,10 +69,13 @@ def parseline(line):
     chkickfmt = u"{time} -!- {nick} was kicked from {chan} by {kicker} [{msg}]"
     chquitfmt = u"{time} -!- {nick} [{usermask}] has quit [{msg}]"
     chnickfmt = u"{time} {old_nick} is now known as {new_nick}"
-    with open('lasteid', 'w+') as f:
-        f.write(str(line['eid']))
     with open("rawlog.json", "a") as f:
         f.write(json.dumps(line) + "\n")
+    if not "eid" in line:
+        print "Authentication failed, please check your credentials. Use either email/password or the session cookie from irccloud.com"
+        sys.exit(1)
+    with open('lasteid', 'w+') as f:
+        f.write(str(line['eid']))
 
     def getts(l):
         return time.gmtime(float(str(l["eid"])[:-6]+"."+str(l["eid"])[-6:]))
